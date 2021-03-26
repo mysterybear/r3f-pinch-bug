@@ -1,26 +1,51 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { CSSProperties, Fragment } from "react"
+import { Canvas } from "react-three-fiber"
+import { useDrag, usePinch } from "react-use-gesture"
+import "./App.css"
 
-function App() {
+const Main = () => {
+  const bind = usePinch(({ movement: [, y] }) => {
+    console.log(`not working pinch ${y}`)
+  })
+  // const bind = useDrag(({ movement: [x, y] }) => {
+  //   console.log(`working drag ${x} ${y}`)
+  // })
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <mesh {...bind()}>
+      <boxBufferGeometry args={[3, 3, 3]} />
+      <meshBasicMaterial color="tomato" />
+    </mesh>
+  )
 }
 
-export default App;
+const style: CSSProperties = {
+  touchAction: "none",
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+  backgroundColor: "silver",
+}
+
+function App() {
+  // const bind = usePinch(({ movement: [, y] }) => {
+  //   console.log(`working pinch ${y}`)
+  // })
+  return (
+    <Fragment>
+      <div style={style}>
+        <Canvas>
+          <Main />
+        </Canvas>
+      </div>
+      {/* <div
+        style={{
+          ...style,
+          backgroundColor: "yellow",
+        }}
+        {...bind()}
+      /> */}
+    </Fragment>
+  )
+}
+
+export default App
