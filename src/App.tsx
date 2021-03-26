@@ -1,18 +1,26 @@
-import React, { CSSProperties, Fragment } from "react"
-import { Canvas } from "react-three-fiber"
-import { useDrag, usePinch } from "react-use-gesture"
+import React, { CSSProperties, useLayoutEffect, useState } from "react"
+import { Canvas, useThree, ViewportData } from "react-three-fiber"
+import { usePinch } from "react-use-gesture"
+import { RectReadOnly } from "react-use-measure"
 import "./App.css"
 
-const Main = () => {
-  const bind = usePinch(({ movement: [, y] }) => {
-    console.log(`not working pinch ${y}`)
-  })
-  // const bind = useDrag(({ movement: [x, y] }) => {
-  //   console.log(`working drag ${x} ${y}`)
-  // })
+const e = 2
+
+type View = {
+  viewport: ViewportData
+  size: RectReadOnly
+}
+
+const Main = ({ setView }: { setView: (v: View) => void }) => {
+  const { viewport, size } = useThree()
+
+  useLayoutEffect(() => {
+    setView({ viewport, size })
+  }, [viewport, size, setView])
+
   return (
-    <mesh {...bind()}>
-      <boxBufferGeometry args={[3, 3, 3]} />
+    <mesh>
+      <boxBufferGeometry args={[e, e, e]} />
       <meshBasicMaterial color="tomato" />
     </mesh>
   )
@@ -27,24 +35,35 @@ const style: CSSProperties = {
 }
 
 function App() {
-  // const bind = usePinch(({ movement: [, y] }) => {
-  //   console.log(`working pinch ${y}`)
-  // })
+  const [view, setView] = useState<View | null>(null)
+
+  const bind = usePinch(
+    ({ origin: [x0, y0] }) => {
+      if (-e / 2 <= x0 && x0 <= e / 2 && -e / 2 <= y0 && y0 <= e / 2)
+        console.log(`working pinch ${x0} ${y0}`)
+    },
+    {
+      transform: ([x, y]) => {
+        if (!view) return [x, y]
+        const {
+          viewport: { factor, width, height },
+          size,
+        } = view
+        const [left, top] = [size.left, size.top].map((v) => v / factor)
+        return [
+          x / factor - (width / 2 + left),
+          -y / factor + (height / 2 + top),
+        ]
+      },
+    }
+  )
+
   return (
-    <Fragment>
-      <div style={style}>
-        <Canvas>
-          <Main />
-        </Canvas>
-      </div>
-      {/* <div
-        style={{
-          ...style,
-          backgroundColor: "yellow",
-        }}
-        {...bind()}
-      /> */}
-    </Fragment>
+    <div style={style} {...bind()}>
+      <Canvas>
+        <Main setView={setView} />
+      </Canvas>
+    </div>
   )
 }
 
